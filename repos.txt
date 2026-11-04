@@ -1,5 +1,1 @@
-api-customer
-api-order
-exp-salesforce
-sys-sap
-proc-payment
+mule-runtime-test-app
