@@ -8,8 +8,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Automation Repo
+      - name: Checkout Automation Repository
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify GitHub Authentication
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          gh auth status
 
       - name: Clone Mule Repositories
         env:
@@ -17,26 +28,27 @@ jobs:
         run: |
           while read repo
           do
+            echo "Cloning $repo"
+
             git clone https://${GH_TOKEN}@github.com/karunaker15/$repo.git
+
           done < repos.txt
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Update Runtime
+      - name: Upgrade Runtime and Create PR
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           while read repo
           do
+            echo "===================================="
             echo "Processing $repo"
+            echo "===================================="
 
             cd $repo
+
             BRANCH_NAME="runtime-upgrade-4.9"
 
-            git checkout -b $BRANCH_NAME
+            git checkout -B $BRANCH_NAME
 
             python3 ../scripts/upgrade.py
 
@@ -45,8 +57,9 @@ jobs:
 
             git add .
 
-            if git diff --staged --quiet; then
-              echo "No changes found"
+            if git diff --cached --quiet
+            then
+              echo "No changes found in $repo"
               cd ..
               continue
             fi
@@ -55,24 +68,22 @@ jobs:
 
             git push --force origin $BRANCH_NAME
 
-            echo "Pull request created for $repo"
+            echo "Checking if PR already exists..."
 
-            gh pr create \
-              --repo karunaker15/$repo \
-              --title "Upgrade Mule Runtime from 4.6 to 4.9" \
-              --body "This PR upgrades the Mule Runtime from version 4.6 to 4.9." \
-              --base main \
-              --head $BRANCH_NAME
-              Automated runtime upgrade from 4.6 to 4.9
-              Changes:
-              - Upgraded Mule Runtime from 4.6 to 4.9.23
-              - Updated Mule Maven Plugin to 4.9.1
-              - Updated minMuleVersion to 4.9.0
-              - Added Java 17 configuration
-              - Added LTS Release Channel
+            if gh pr view "$BRANCH_NAME" \
+              --repo "karunaker15/$repo" >/dev/null 2>&1
+            then
+              echo "PR already exists for $repo"
+            else
+              echo "Creating PR for $repo"
 
-
-          
+              gh pr create \
+                --repo "karunaker15/$repo" \
+                --base "main" \
+                --head "$BRANCH_NAME" \
+                --title "Upgrade Mule Runtime from 4.6 to 4.9" \
+                --body "Automated Mule Runtime Upgrade. Updated Mule Runtime to 4.9.23, Mule Maven Plugin to 4.9.1, minMuleVersion to 4.9.0, Java Version 17, and Release Channel LTS."
+            fi
 
             cd ..
 
