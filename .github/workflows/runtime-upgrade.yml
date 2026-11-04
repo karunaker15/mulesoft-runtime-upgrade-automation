@@ -34,8 +34,9 @@ jobs:
             echo "Processing $repo"
 
             cd $repo
+            BRANCH_NAME="runtime-upgrade-4.9-${{ github.run_number }}"
 
-            git checkout -b runtime-upgrade-4.9
+            git checkout -b $BRANCH_NAME
 
             python3 ../scripts/upgrade.py
 
