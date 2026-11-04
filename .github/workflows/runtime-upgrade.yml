@@ -53,7 +53,7 @@ jobs:
 
             git commit -m "Upgrade Mule Runtime from 4.6 to 4.9"
 
-            git push origin runtime-upgrade-4.9
+            git push origin $BRANCH_NAME
 
             cd ..
 
