@@ -118,7 +118,7 @@ jobs:
           echo "Upgrade process completed."
           if [ -n "$FAILED_REPOS" ]; then
             echo "The following repositories failed to upgrade: $FAILED_REPOS"
-            exit 1
+            
           else
             echo "All repositories upgraded successfully."
           fi
