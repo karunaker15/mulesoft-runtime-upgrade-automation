@@ -58,7 +58,7 @@ jobs:
             echo "Pull request created for $repo"
 
             gh pr create \
-              -- repo karunaker15/$repo \
+              --repo karunaker15/$repo \
               --title "Upgrade Mule Runtime from 4.6 to 4.9" \
               --body "This PR upgrades the Mule Runtime from version 4.6 to 4.9." \
               --base main \
