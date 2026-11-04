@@ -55,6 +55,25 @@ jobs:
 
             git push --force origin $BRANCH_NAME
 
+            echo "Pull request created for $repo"
+
+            gh pr create \
+              -- repo karunaker15/$repo \
+              --title "Upgrade Mule Runtime from 4.6 to 4.9" \
+              --body "This PR upgrades the Mule Runtime from version 4.6 to 4.9." \
+              --base main \
+              --head $BRANCH_NAME
+              Automated runtime upgrade from 4.6 to 4.9
+              Changes:
+              - Upgraded Mule Runtime from 4.6 to 4.9.23
+              - Updated Mule Maven Plugin to 4.9.1
+              - Updated minMuleVersion to 4.9.0
+              - Added Java 17 configuration
+              - Added LTS Release Channel
+
+
+          
+
             cd ..
 
           done < repos.txt
