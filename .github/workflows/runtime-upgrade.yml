@@ -105,6 +105,7 @@ jobs:
               then
                 echo "Failed to create PR for $repo"
                 FAILED_REPOS="$FAILED_REPOS $repo"
+              fi
             fi
 
             cd ..
