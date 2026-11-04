@@ -30,9 +30,7 @@ jobs:
           do
             echo "Cloning $repo"
 
-            git clone https://${GH_TOKEN}@github.com/karunaker15/$repo.git || {
-              echo "Failed to clone $repo"
-            }
+            git clone https://${GH_TOKEN}@github.com/karunaker15/$repo.git
 
           done < repos.txt
 
@@ -40,23 +38,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-
           FAILED_REPOS=""
-
           while read repo
           do
-            echo ""
             echo "===================================="
             echo "Processing $repo"
             echo "===================================="
 
-            if ! cd "$repo"
+            if !cd $repo
             then
-              echo "Repository folder not found"
-
-              FAILED_REPOS="${FAILED_REPOS}
-- ${repo} (Clone Failed)"
-
+              echo "Failed to enter directory $repo"
+              FAILED_REPOS="$FAILED_REPOS $repo"
               continue
             fi
 
@@ -64,61 +56,35 @@ jobs:
 
             git checkout -B $BRANCH_NAME
 
-            python3 ../scripts/upgrade.py || {
-              echo "Python Script Failed"
-
-              FAILED_REPOS="${FAILED_REPOS}
-- ${repo} (Upgrade Script Failed)"
-
-              cd ..
-              continue
-            }
+            python3 ../scripts/upgrade.py
 
             git config user.name "github-actions"
             git config user.email "github-actions@github.com"
-
-            echo ""
-            echo "Git Status After Upgrade"
-            git status
-
-            echo ""
-            echo "Modified Files"
-            git diff --name-only
 
             git add .
 
             if git diff --cached --quiet
             then
               echo "No changes found in $repo"
-
+              FAILED_REPOS="$FAILED_REPOS $repo"
               cd ..
               continue
             fi
 
             if ! git commit -m "Upgrade Mule Runtime from 4.6 to 4.9"
             then
-
-              echo "Commit failed for $repo"
-
-              FAILED_REPOS="${FAILED_REPOS}
-- ${repo} (Commit Failed)"
-
+              echo "Failed to commit changes in $repo"
+              FAILED_REPOS="$FAILED_REPOS $repo"
               cd ..
               continue
-
             fi
 
             if ! git push --force origin $BRANCH_NAME
             then
-
-              echo "Push failed for $repo"
-
-              FAILED_REPOS="${FAILED_REPOS}
-- ${repo} (Push Failed)"
-
+              echo "Failed to push changes in $repo"
+              FAILED_REPOS="$FAILED_REPOS $repo"
               cd ..
               continue
-
             fi
 
             echo "Checking if PR already exists..."
@@ -126,11 +92,8 @@ jobs:
             if gh pr view "$BRANCH_NAME" \
               --repo "karunaker15/$repo" >/dev/null 2>&1
             then
-
               echo "PR already exists for $repo"
-
             else
-
               echo "Creating PR for $repo"
 
               if ! gh pr create \
@@ -139,39 +102,19 @@ jobs:
                 --head "$BRANCH_NAME" \
                 --title "Upgrade Mule Runtime from 4.6 to 4.9" \
                 --body "Automated Mule Runtime Upgrade. Updated Mule Runtime to 4.9.23, Mule Maven Plugin to 4.9.1, minMuleVersion to 4.9.0, Java Version 17, and Release Channel LTS."
-
-
               then
-
-                echo "PR Creation Failed"
-
-                FAILED_REPOS="${FAILED_REPOS}
-- ${repo} (PR Creation Failed)"
-
-              fi
-
+                echo "Failed to create PR for $repo"
+                FAILED_REPOS="$FAILED_REPOS $repo"
             fi
 
             cd ..
 
           done < repos.txt
-
-          echo ""
           echo "===================================="
-          echo "UPGRADE EXECUTION SUMMARY"
-          echo "===================================="
-
-          if [ -z "$FAILED_REPOS" ]
-          then
-
-            echo "All repositories processed successfully."
-
-          else
-
-            echo ""
-            echo "Failed Repositories:"
-            echo "$FAILED_REPOS"
-
+          echo "Upgrade process completed."
+          if [ -n "$FAILED_REPOS" ]; then
+            echo "The following repositories failed to upgrade: $FAILED_REPOS"
             exit 1
-
+          else
+            echo "All repositories upgraded successfully."
           fi
