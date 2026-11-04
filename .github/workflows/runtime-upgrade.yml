@@ -90,7 +90,7 @@ jobs:
             echo "Base branch for $repo is $BASE_BRANCH"
 
             echo "Checking if PR already exists..."
-            PR_EXISTS=$(gh pr list --repo "karunaker15/$repo" --head "$BRANCH_NAME" --json number -jq 'length')
+            PR_EXISTS=$(gh pr list --repo "karunaker15/$repo" --head "$BRANCH_NAME" --json number --jq 'length')
             echo "PR_COUNTS: $PR_EXISTS"
             if [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR already exists for $repo"
