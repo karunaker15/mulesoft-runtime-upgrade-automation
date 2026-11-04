@@ -1,1 +1,3 @@
 mule-runtime-test-app
+runtime-test1
+runtime-test2
