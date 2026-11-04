@@ -66,7 +66,7 @@ jobs:
             if git diff --cached --quiet
             then
               echo "No changes found in $repo"
-              FAILED_REPOS="$FAILED_REPOS $repo"
+              
               cd ..
               continue
             fi
@@ -86,19 +86,20 @@ jobs:
               cd ..
               continue
             fi
+            BASE_BRANCH=$(gh repo view "karunaker15/$repo" --json defaultBranchRef -q ".defaultBranchRef.name")
+            echo "Base branch for $repo is $BASE_BRANCH"
 
             echo "Checking if PR already exists..."
-
-            if gh pr view "$BRANCH_NAME" \
-              --repo "karunaker15/$repo" >/dev/null 2>&1
-            then
+            PR_EXISTS=$(gh pr list --repo "karunaker15/$repo" --head "$BRANCH_NAME" --json number -jq 'length')
+            echo "PR_COUNTS: $PR_EXISTS"
+            if [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR already exists for $repo"
             else
               echo "Creating PR for $repo"
 
               if ! gh pr create \
                 --repo "karunaker15/$repo" \
-                --base "main" \
+                --base "$BASE_BRANCH" \
                 --head "$BRANCH_NAME" \
                 --title "Upgrade Mule Runtime from 4.6 to 4.9" \
                 --body "Automated Mule Runtime Upgrade. Updated Mule Runtime to 4.9.23, Mule Maven Plugin to 4.9.1, minMuleVersion to 4.9.0, Java Version 17, and Release Channel LTS."
@@ -107,6 +108,8 @@ jobs:
                 FAILED_REPOS="$FAILED_REPOS $repo"
               fi
             fi
+
+            
 
             cd ..
 
