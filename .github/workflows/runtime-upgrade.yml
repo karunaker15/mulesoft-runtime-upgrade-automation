@@ -45,7 +45,7 @@ jobs:
             echo "Processing $repo"
             echo "===================================="
 
-            if !cd $repo
+            if ! cd $repo
             then
               echo "Failed to enter directory $repo"
               FAILED_REPOS="$FAILED_REPOS $repo"
