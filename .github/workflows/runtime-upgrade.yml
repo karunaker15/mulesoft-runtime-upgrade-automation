@@ -1,0 +1,49 @@
+name: Runtime Upgrade
+
+on:
+  workflow_dispatch:
+
+jobs:
+  upgrade:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Automation Repo
+        uses: actions/checkout@v4
+
+      - name: Clone Mule Repositories
+        run: |
+
+          while read repo
+          do
+
+            git clone \
+            https://${{ secrets.GH_TOKEN }}@github.com/your-org/$repo.git
+
+          done < repos.txt
+
+      - name: Update Runtime
+        run: |
+
+          while read repo
+          do
+
+            cd $repo
+
+            python3 ../scripts/upgrade.py
+
+            git checkout -b runtime-upgrade-4.9
+
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+
+            git add .
+            git commit -m "Upgrade Mule Runtime 4.9"
+
+            git push origin runtime-upgrade-4.9
+
+            cd ..
+
+          done < repos.txt
